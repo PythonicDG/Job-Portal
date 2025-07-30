@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Your OTP Code</title>
+    <style>
+        /* Reset and base */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9fafb;
+            color: #333;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        /* Container */
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.1);
+            padding: 30px 40px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: #007bff;
+            font-weight: 700;
+            font-size: 28px;
+            margin: 0;
+            letter-spacing: 1.1px;
+        }
+
+        /* Content */
+        .content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 10px 0;
+            color: #444444;
+        }
+
+        .otp {
+            font-size: 32px;
+            font-weight: 800;
+            color: #007bff;
+            margin: 25px 0;
+            text-align: center;
+            letter-spacing: 5px;
+            background: #e6f0ff;
+            padding: 15px 0;
+            border-radius: 8px;
+            user-select: all;
+            -webkit-user-select: all;
+            -moz-user-select: all;
+            -ms-user-select: all;
+        }
+
+        /* Footer */
+        .footer {
+            font-size: 12px;
+            color: #888888;
+            text-align: center;
+            margin-top: 35px;
+            border-top: 1px solid #e1e1e1;
+            padding-top: 20px;
+        }
+
+        /* Responsive */
+        @media only screen and (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+                margin: 20px auto;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .otp {
+                font-size: 26px;
+                padding: 12px 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" role="main">
+        <div class="header">
+            <h1>Your OTP Code</h1>
+        </div>
+
+        <div class="content">
+            <p>Hello {{ email }},</p>
+            <p>You requested a One-Time Password (OTP) for email verification.</p>
+            <div class="otp">{{ otp }}</div>
+            <p>This OTP is valid for 5 minutes. Please do not share it with anyone.</p>
+        </div>
+
+        <div class="footer">
+            &copy; {{ timezone.now.year }} Your Company Name. All rights reserved.
+        </div>
+    </div>
+</body>
+
+</html>
