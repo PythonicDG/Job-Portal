@@ -22,7 +22,7 @@ def send_otp_mail(email):
         "otp": otp
     }
 
-    email_body = render_to_string("/home/cspl/Company_work/New Folder/Job-Portal/backend/job_portal/mainapp/templates/emails/send_otp_email_template.html", context)
+    email_body = render_to_string("emails/send_otp_email_template.html", context)
 
     mail_status = send_mail(
         subject="Verify Your Email",
@@ -38,11 +38,11 @@ def send_otp_mail(email):
 def send_registration_mail(user_instance):
     context = {
         "first_name": user_instance.first_name,
-        "last_name": user_instane.last_name,
+        "last_name": user_instance.last_name,
         "email": user_instance.email
     }
     
-    email_body = render_to_string("/home/cspl/Company_work/New Folder/Job-Portal/backend/job_portal/mainapp/templates/emails/registration_email.html", context)
+    email_body = render_to_string("emails/registration_email.html", context)
 
     mail_status = send_mail(
         subject = "Registration Sucess",
