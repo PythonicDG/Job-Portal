@@ -55,3 +55,32 @@ def send_registration_mail(user_instance):
     
     return mail_status
     
+def send_forgot_password_otp(email, first_name):
+    
+    otp = random.randint(10000, 99999)
+    expires_at = timezone.now() + timedelta(minutes=5)
+
+    otp_instance, is_created = VerifyEmailOtp.objects.update_or_create(
+        email=email,
+        defaults={"otp": otp, "expires_at": expires_at, "is_verified": False}
+    )
+    
+    context = {
+        "otp": otp,
+        "email": email,
+        "first_name": first_name
+    }
+    
+    email_body = render_to_string("emails/send_otp_email_template.html", context)
+
+    mail_status = send_mail(
+        subject = "Forgot Password OTP",
+            message = "",
+        from_email = EMAIL_HOST_USER,
+        recipient_list = [email],
+        html_message = email_body,
+        fail_silently = False
+        
+    )
+
+    return mail_status

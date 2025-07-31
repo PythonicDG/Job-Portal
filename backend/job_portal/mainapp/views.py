@@ -120,7 +120,7 @@ def user_registration(request):
             )
             
             otp_instance.delete()
-
+            # send_registration_mail(user)
             return JsonResponse({"message": "User registered successfully"}, status=201)
 
         except Exception as e:
@@ -155,8 +155,57 @@ def user_login(request):
         return JsonResponse({"error": str(e)})
     
 @api_view(["POST"])
-def send_otp_rest_password(request):
+def send_otp_forgot_password(request):
     try:
         email = request.data.get("email")
-
         
+        if not email:
+            return JsonResponse({"message": "email is requierd"})
+        
+        user_instance = User.objects.filter(email = email, is_staff = False).first()
+
+        if not user_instance:
+            return JsonResponse({"error": "User not found"}, status = status.HTTP_400_BAD_REQUEST)
+
+        if user_instance.is_active == False:
+            return JsonResponse({"message": "User is not Active"})
+        
+        first_name = user_instance.first_name
+        
+        mail_status = send_forgot_password_otp(email, first_name)
+
+        return JsonResponse({"message": "OTP sent Successfull"})
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)})
+
+@api_view(['POST'])
+def verify_forgot_password_otp(request):
+    try:
+        email = request.data.get("email")
+        otp = request.data.get("otp")
+
+        if not email:
+            return JsonResponse({"error": "email required"})
+        
+        if not otp:
+            return JsonResponse({"error": "otp required"})
+        
+        otp_instance = VerifyEmailOtp.objects.filter(
+            email = email, otp = otp
+        ).first()
+
+        if not otp_instance:
+            return JsonResponse({"error": "otp not found or invalid"})
+        
+        if otp_instance.expires_at < timezone.now():
+            return JsonResponse({"message": "Invalid OTP"})
+        
+        otp_instance.is_verified = True
+        
+        otp_instance.save()
+
+        return JsonResponse({"message": "verification success"})
+
+    except Exception as e:
+        return JsonResponse({"message":str(e)})
