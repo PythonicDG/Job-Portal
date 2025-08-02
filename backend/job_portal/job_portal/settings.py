@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-034uatm(@e6i44_)qzkyr5w4xkk-cx=rfk&2auob5sv&m@)ize
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['prohires.strangled.net', '34.47.167.176']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -79,7 +79,6 @@ WSGI_APPLICATION = 'job_portal.wsgi.application'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
-    "https://prohires.strangled.net",
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -109,7 +108,6 @@ CORS_ALLOW_HEADERS = [
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
-    "https://prohires.strangled.net",
 ]
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -195,12 +193,3 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'dipakgaikwadms@gmail.com'
 EMAIL_HOST_PASSWORD = 'epfgkbrqivwyxsbc'
-
-SECURE_SSL_REDIRECT = True  # Redirect HTTP to HTTPS in production
-SECURE_HSTS_SECONDS = 31536000  # Force HTTPS
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-
-# CSRF & Session Cookie Settings for Production
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
