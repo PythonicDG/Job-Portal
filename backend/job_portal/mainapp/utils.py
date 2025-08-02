@@ -84,3 +84,6 @@ def send_forgot_password_otp(email, first_name):
     )
 
     return mail_status
+
+def dipak(database):
+    pass
