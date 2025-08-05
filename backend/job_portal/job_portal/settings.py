@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'mainapp',
     'frontend',
-    'job'
+    'job',
+    'headerfooter'
 ]
 
 MIDDLEWARE = [

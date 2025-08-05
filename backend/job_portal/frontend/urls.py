@@ -1,6 +1,8 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
 
 urlpatterns = [
-    # path('', views.job_list, name='job-list'),  
+    path("fetch_records/", views.fetch_records),
+    
 ]

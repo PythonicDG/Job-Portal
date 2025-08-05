@@ -11,7 +11,9 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("job/", include("job.urls")),
     path("mainapp/", include("mainapp.urls")),
-    path("frontend/", include("frontend.urls"))
+    path("frontend/", include("frontend.urls")),
+    path("headerfooter/", include("headerfooter.urls")),
+
     ]
 
 if settings.DEBUG:
