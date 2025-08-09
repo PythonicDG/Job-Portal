@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-034uatm(@e6i44_)qzkyr5w4xkk-cx=rfk&2auob5sv&m@)ize
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['prohires.strangled.net', 'localhost', '127.0.0.1']
+
 
 
 # Application definition
@@ -81,6 +82,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
 ]
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
@@ -107,9 +109,11 @@ CORS_ALLOW_HEADERS = [
 ]
 
 CSRF_TRUSTED_ORIGINS = [
+    'https://prohires.strangled.net',
     'http://localhost:5173',
     'http://127.0.0.1:5173',
 ]
+
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
