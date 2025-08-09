@@ -9,7 +9,10 @@ from .models import(VerifyEmailOtp,)
 from job_portal.settings import *
 
 def send_otp_mail(email):
-    otp = random.randint(10000, 99999)
+    otp = random.randint(100000, 999999)  
+
+    print("Generated OTP:", otp, "Length:", len(str(otp)))  # Debug log
+
     expires_at = timezone.now() + timedelta(minutes=5)
 
     otp_instance, is_created = VerifyEmailOtp.objects.update_or_create(
