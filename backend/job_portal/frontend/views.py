@@ -21,11 +21,11 @@ def fetch_records(request):
             "error": "page not found"
         })
         
-    page_sections = PageSection.objects.filter(submenu = submenu, is_active = True).order_by('sequence')
+    page_sections = PageSection.objects.filter(submenu = submenu, is_active = True)
 
     data = {
         "result": True,
-        "title": submenu.sub_menu_lable,
+        "title": submenu.title,
         "slug": slug,
         "sections": []
     }
@@ -45,7 +45,6 @@ def fetch_records(request):
                 "icon_alternate_text": content.icon_alternate_text,
                 "button_text": content.button_text,
                 "button_url": content.button_url,
-                "sequence": content.sequence
             })
 
         data['sections'].append({
@@ -53,14 +52,14 @@ def fetch_records(request):
             "heading": section.heading,
             "description": section.description,
             "logo": section.logo.url if section.logo else None,
-            "logo_alternate_text": section.logo_alternate_text,
+            "logo_alternate_text": section.logo_alt_text,
             "slogan": section.slogan,
             "button_text": section.button_text,
             "button_url": section.button_url,
             "image_url": section.image.url if section.image else None,
-            "image_alternate_text": section.image_alternate_text,
+            "image_alternate_text": section.image_alt_text,
             "background_image": section.background_image.url if section.background_image else None,
-            "background_image_alternate_text": section.background_image_alternate_text,
+            "background_image_alternate_text": section.background_image_alt_text,
             "contents": content_data
         })
     

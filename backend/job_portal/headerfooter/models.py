@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.utils.text import slugify
 
 class CompanyInfo(models.Model):
     name = models.CharField(max_length=200)
@@ -37,6 +37,8 @@ class SubMenu(models.Model):
     title = models.CharField(max_length=100)
     url = models.CharField(blank=True, null=True)
     order = models.PositiveIntegerField(default=0, help_text="Order of the submenu item")
+    slug = models.SlugField(unique=True, max_length=50, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ['order']
@@ -44,3 +46,14 @@ class SubMenu(models.Model):
 
     def __str__(self):
         return f"{self.menu.title} -> {self.title}"
+
+    def save(self, *args, **kwargs):
+        if self.title and (not self.slug or slugify(self.title) != self.slug):
+            base_slug = slugify(self.title)
+            slug = base_slug
+            num = 1
+            while SubMenu.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{num}"
+                num += 1
+            self.slug = slug
+        super().save(*args, **kwargs)

@@ -198,3 +198,5 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'dipakgaikwadms@gmail.com'
 EMAIL_HOST_PASSWORD = 'epfgkbrqivwyxsbc'
+
+JSEARCH_API_KEY = "e1b0216a91msh98ebc7f956300dep12612fjsnbf9bdc160328"

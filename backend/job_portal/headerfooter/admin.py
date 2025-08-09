@@ -14,9 +14,10 @@ class MenuAdmin(admin.ModelAdmin):
 
 @admin.register(SubMenu)
 class SubMenuAdmin(admin.ModelAdmin):
-    list_display = ('title', 'menu', 'url', 'order')
-    list_filter = ('menu',)
+    list_display = ('title', 'menu', 'url', 'order', 'is_active')
+    list_filter = ('menu', 'is_active')
     ordering = ('menu', 'order')
+
 
 @admin.register(CompanyInfo)
 class CompanyInfoAdmin(admin.ModelAdmin):
