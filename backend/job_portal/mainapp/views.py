@@ -115,8 +115,7 @@ def user_registration(request):
                 city=city,
                 state=state,
                 country=country,
-                pincode=pincode,
-                is_selected=is_selected  
+                pincode=pincode
             )
             
             otp_instance.delete()
