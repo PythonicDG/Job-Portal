@@ -10,9 +10,11 @@ from django.contrib.auth.models import User
 from .models import *
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from rest_framework.permissions import AllowAny
 
     
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def send_otp_for_register_email(request):
     try:
         email = request.data.get("email")
@@ -32,6 +34,7 @@ def send_otp_for_register_email(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def verify_otp_email_verification(request):
     try:
         email = request.data.get("email")
@@ -61,6 +64,7 @@ def verify_otp_email_verification(request):
         return JsonResponse({"error": str(r)})
     
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def user_registration(request):
     with transaction.atomic():
         try:
@@ -128,6 +132,7 @@ def user_registration(request):
         
         
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def user_login(request):
     try:
         email = request.data.get("email")
@@ -155,6 +160,7 @@ def user_login(request):
         return JsonResponse({"error": str(e)})
     
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def send_otp_forgot_password(request):
     try:
         email = request.data.get("email")
@@ -180,6 +186,7 @@ def send_otp_forgot_password(request):
         return JsonResponse({"error": str(e)})
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def verify_forgot_password_otp(request):
     try:
         email = request.data.get("email")
