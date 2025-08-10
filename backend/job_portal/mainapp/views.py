@@ -240,14 +240,11 @@ def get_user_profile(request):
         address_list = []
         for addr in addresses:
             address_list.append({
-                "type": addr.type,
                 "address": addr.address,
                 "city": addr.city,
                 "state": addr.state,
                 "country": addr.country,
                 "pincode": addr.pincode,
-                "is_selected": addr.is_selected,
-                "is_active": addr.is_active,
             })
 
         user_data = {
@@ -256,8 +253,6 @@ def get_user_profile(request):
             "phone_number": site_user.phone_number,
             "profile_picture": request.build_absolute_uri(site_user.profile_picture.url) if site_user.profile_picture else None,
             "resume_link": request.build_absolute_uri(site_user.resume_link.url) if site_user.resume_link else None,
-            "created_at": site_user.created_at,
-            "updated_at": site_user.updated_at,
             "addresses": address_list,
         }
 
