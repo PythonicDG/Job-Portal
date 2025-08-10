@@ -4,7 +4,7 @@ from django.db import models
 class Employer(models.Model):
     name = models.CharField(max_length = 500)
     employer_logo =  models.ImageField(upload_to = "employer_logo/")
-    website = models.URLField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True, max_length = 500)
 
     class Meta:
         unique_together = ('name', 'website')
@@ -23,12 +23,12 @@ class Location(models.Model):
 class Job(models.Model):
     job_id = models.CharField(max_length = 500, unique=True)  
     title = models.CharField(max_length = 500)
-    description = models.TextField()
+    description = models.TextField(null = True, blank = True)
     is_remote = models.BooleanField(default = False)
     employment_type = models.CharField(max_length = 50, blank = True, null = True)
-    posted_at = models.DateTimeField()
-    posted_timestamp = models.BigIntegerField()
-    google_link = models.URLField(blank = True, null = True)
+    posted_at = models.DateTimeField(null = True, blank = True)
+    posted_timestamp = models.BigIntegerField(null = True, blank = True)
+    google_link = models.URLField(blank = True, null = True, max_length = 500)
 
     min_salary = models.FloatField(blank = True, null = True)
     max_salary = models.FloatField(blank = True, null = True)
@@ -43,14 +43,14 @@ class Job(models.Model):
 
 class ApplyOption(models.Model):
     job = models.ForeignKey(Job, related_name='apply_options', on_delete=models.CASCADE)
-    publisher = models.CharField(max_length=500)
-    apply_link = models.URLField()
+    publisher = models.CharField(max_length=500, null = True, blank = True)
+    apply_link = models.URLField(max_length = 500, null = True, blank = True)
     is_direct = models.BooleanField(default=False)
 
 
 class EmploymentType(models.Model):
     job = models.ForeignKey(Job, related_name='employment_types', on_delete=models.CASCADE)
-    type = models.CharField(max_length=50)
+    type = models.CharField(max_length=50, null = True, blank = True)
 
 class SidebarMenu(models.Model):
     title = models.CharField(max_length=100)

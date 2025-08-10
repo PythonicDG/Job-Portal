@@ -72,6 +72,14 @@ def fetch_and_store_jobs(response):
                     'longitude': job_data.get('job_longitude'),
                 }
             )
+        apply_link = ''
+        for apply_data in job_data.get('apply_options', []):
+            if apply_data.get('is_direct'):
+                apply_link = apply_data.get('apply_link')
+                break
+
+        if not apply_link and job_data.get('apply_options'):
+            apply_link = job_data['apply_options'][0].get('apply_link')
 
         job = Job.objects.create(
             job_id=job_id,
@@ -81,7 +89,7 @@ def fetch_and_store_jobs(response):
             employment_type=job_data.get('job_employment_type') or '',
             posted_at=job_data['job_posted_at_datetime_utc'],
             posted_timestamp=job_data['job_posted_at_timestamp'],
-            google_link=job_data.get('job_google_link') or '',
+            google_link=apply_link or '',
             min_salary=job_data.get('job_min_salary'),
             max_salary=job_data.get('job_max_salary'),
             salary_period=job_data.get('job_salary_period') or '',
