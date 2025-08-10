@@ -12,7 +12,9 @@ from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from .util import send_otp_mail
-    
+from django.utils import timezone
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def send_otp_for_register_email(request):
