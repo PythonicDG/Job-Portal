@@ -5,7 +5,8 @@ from .models import (
     VerifyEmailOtp,
     UserAddress,
     ExpiringToken,
-    ResetPasswordOtp
+    ResetPasswordOtp,
+    ParsedResumeData
 )
 
 
@@ -88,3 +89,5 @@ class ResetPasswordOtpAdmin(admin.ModelAdmin):
     def user_email(self, obj):
         return obj.user.user.email
     user_email.short_description = 'User Email'
+
+admin.site.register(ParsedResumeData)
