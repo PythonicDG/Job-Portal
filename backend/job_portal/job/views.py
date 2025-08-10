@@ -19,20 +19,36 @@ def job_listings(request):
 @api_view(['POST'])
 def sync_jobs(request):
     try:
-        query = request.data.get("query", "Python Developer")
         location = request.data.get("location", "India")
         page = request.data.get("page", 1)
 
-        response = fetch_jobs(query=query, location=location, page=page)
+        queries = [
+            "Python Developer",
+            "Frontend Developer",
+            "Backend Developer",
+            "Full Stack Developer",
+            "DevOps Engineer",
+            "Data Scientist",
+            "Machine Learning Engineer",
+            "React Developer",
+            "Node.js Developer",
+            "Software Engineer"
+        ]
 
-        fetch_and_store_jobs(response)
+        for query in queries:
+            response = fetch_jobs(query=query, location=location, page=page)
+            fetch_and_store_jobs(response)
 
-        return Response({"status": "success", "message": "Jobs synced successfully."})
+        return Response({
+            "status": "success",
+            "message": f"Jobs synced successfully for {len(queries)} job roles."
+        })
 
     except Exception as e:
-        return Response({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
+        return Response({
+            "status": "error",
+            "message": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def jobs_list(request):
