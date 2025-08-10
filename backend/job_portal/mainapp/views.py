@@ -208,3 +208,14 @@ def verify_forgot_password_otp(request):
 
     except Exception as e:
         return JsonResponse({"message":str(e)})
+
+@api_view(['POST'])
+def user_logout(request):
+    try:
+        if request.user.is_authenticated:
+            Token.objects.filter(user=request.user).delete()
+            return JsonResponse({"message": "Logout successful"})
+        else:
+            return JsonResponse({"error": "User not authenticated"}, status=401)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
