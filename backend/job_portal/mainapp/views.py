@@ -11,7 +11,7 @@ from .models import *
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
-
+from .util import send_otp_mail
     
 @api_view(["POST"])
 @permission_classes([AllowAny])
