@@ -2,8 +2,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Menu, CompanyInfo
 from .serializers import MenuSerializer
+from rest_framework.permissions import AllowAny
+
 
 class HeaderFooterView(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request):
         menus = Menu.objects.all().order_by('order')
         menu_serializer = MenuSerializer(menus, many=True)
