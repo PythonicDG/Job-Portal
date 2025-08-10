@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Employer, Location, Job, ApplyOption, EmploymentType
+from .models import Employer, Location, Job, ApplyOption, EmploymentType, SidebarMenu
 
 @admin.register(Employer)
 class EmployerAdmin(admin.ModelAdmin):
@@ -26,3 +26,9 @@ class ApplyOptionAdmin(admin.ModelAdmin):
 class EmploymentTypeAdmin(admin.ModelAdmin):
     list_display = ('job', 'type')
     search_fields = ('type',)
+
+
+@admin.register(SidebarMenu)
+class SidebarMenuAdmin(admin.ModelAdmin):
+    list_display = ('title', 'url')
+    search_fields = ('title',)

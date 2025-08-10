@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .utils import fetch_jobs, fetch_and_store_jobs
-from .models import Job
-
+from .models import Job, SidebarMenu
+from django.http import JsonResponse
 
 @api_view(["GET"])
 def job_listings(request):
@@ -99,3 +99,16 @@ def jobs_list(request):
         })
 
     return Response(data)
+
+@api_view(['GET'])
+def sidebar_menu_list(request):
+    menus = SidebarMenu.objects.all().order_by('order')
+    data = [
+        {
+            "title": menu.title,
+            "url": menu.url,
+            "icon": menu.icon.url,
+        }
+        for menu in menus
+    ]
+    return JsonResponse(data, safe=False)

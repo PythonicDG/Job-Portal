@@ -52,3 +52,11 @@ class EmploymentType(models.Model):
     job = models.ForeignKey(Job, related_name='employment_types', on_delete=models.CASCADE)
     type = models.CharField(max_length=50)
 
+class SidebarMenu(models.Model):
+    title = models.CharField(max_length=100)
+    url = models.CharField(max_length=200)
+    icon = models.ImageField(upload_to='sidebar_icons/')
+    order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return self.title
