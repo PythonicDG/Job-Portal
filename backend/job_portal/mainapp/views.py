@@ -2,7 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .utils import *
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
 from django.db import transaction
 from django.contrib.auth.models import User
@@ -219,3 +220,44 @@ def user_logout(request):
             return JsonResponse({"error": "User not authenticated"}, status=401)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_profile(request):
+    try:
+        user = request.user
+        site_user = SiteUser.objects.get(user=user)
+
+        addresses = UserAddress.objects.filter(user=site_user)
+
+        address_list = []
+        for addr in addresses:
+            address_list.append({
+                "type": addr.type,
+                "address": addr.address,
+                "city": addr.city,
+                "state": addr.state,
+                "country": addr.country,
+                "pincode": addr.pincode,
+                "is_selected": addr.is_selected,
+                "is_active": addr.is_active,
+            })
+
+        user_data = {
+            "username": user.username,
+            "email": user.email,
+            "phone_number": site_user.phone_number,
+            "profile_picture": request.build_absolute_uri(site_user.profile_picture.url) if site_user.profile_picture else None,
+            "resume_link": request.build_absolute_uri(site_user.resume_link.url) if site_user.resume_link else None,
+            "created_at": site_user.created_at,
+            "updated_at": site_user.updated_at,
+            "addresses": address_list,
+        }
+
+        return Response({"status": "success", "data": user_data}, status=status.HTTP_200_OK)
+
+    except SiteUser.DoesNotExist:
+        return Response({"status": "error", "message": "SiteUser profile not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    except Exception as e:
+        return Response({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

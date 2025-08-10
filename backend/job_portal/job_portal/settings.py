@@ -200,3 +200,12 @@ EMAIL_HOST_USER = 'dipakgaikwadms@gmail.com'
 EMAIL_HOST_PASSWORD = 'epfgkbrqivwyxsbc'
 
 JSEARCH_API_KEY = "e1b0216a91msh98ebc7f956300dep12612fjsnbf9bdc160328"
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
