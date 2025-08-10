@@ -82,3 +82,10 @@ class ResetPasswordOtp(models.Model):
     created_at = models.DateTimeField()
     is_verified = models.BooleanField(default = False)
     
+
+class ParsedResumeData(models.Model):
+    user = models.OneToOneField(SiteUser, on_delete=models.CASCADE)
+    full_text = models.TextField(blank=True)
+    skills = models.TextField(blank=True)
+    matched_keywords = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)

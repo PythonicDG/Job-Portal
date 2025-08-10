@@ -21,7 +21,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    'mainapp',
+    'mainapp.apps.MainappConfig',
     'frontend',
     'job',
     'headerfooter'
