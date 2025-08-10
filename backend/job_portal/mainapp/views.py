@@ -61,7 +61,7 @@ def verify_otp_email_verification(request):
         return JsonResponse({"message": "OTP verified Success"})
     
     except Exception as e:
-        return JsonResponse({"error": str(r)})
+        return JsonResponse({"error": str(e)})
     
 @api_view(["POST"])
 @permission_classes([AllowAny])
