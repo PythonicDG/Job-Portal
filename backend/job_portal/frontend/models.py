@@ -6,6 +6,7 @@ class PageSection(models.Model):
     SECTION_TYPE_CHOICES = [
         ("banner", "Banner"),
         ("hero", "Hero"),
+        ("contact_us", "Contact US"),
         ("testimonial", "Testimonial"),
         ("other", "Other"),
     ]
