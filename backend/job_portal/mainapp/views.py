@@ -13,7 +13,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from .util import send_otp_mail
 from django.utils import timezone
-
+from .models import SiteUser
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -23,6 +23,9 @@ def send_otp_for_register_email(request):
 
         if not email:
             return Response({"message": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if SiteUser.objects.filter(user__email = email).exists():
+            return Response({"message": "This email already registered"})
 
         mail_status = send_otp_mail(email)
 
