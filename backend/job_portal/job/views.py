@@ -45,7 +45,7 @@ def sync_jobs(request):
 
 @api_view(['GET'])
 def jobs_list(request):
-    jobs = Job.objects.all().select_related('employer', 'location').prefetch_related('apply_options', 'employment_types')
+    jobs = Job.objects.all().select_related('employer', 'location').prefetch_related('apply_options', 'employment_types').order_by('-posted_at')
 
     data = []
     for job in jobs:
