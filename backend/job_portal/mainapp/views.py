@@ -239,8 +239,9 @@ def get_user_profile(request):
     try:
         user = request.user
         site_user = SiteUser.objects.get(user=user)
-
+        user_site_user = User.objects.get(siteuser = site_user)
         addresses = UserAddress.objects.filter(user=site_user)
+
 
         address_list = []
         for addr in addresses:
@@ -253,7 +254,8 @@ def get_user_profile(request):
             })
 
         user_data = {
-            "username": user.username,
+            "name": user_site_user.first_name,
+            "last_name": user_site_user.last_name,
             "email": user.email,
             "phone_number": site_user.phone_number,
             "profile_picture": request.build_absolute_uri(site_user.profile_picture.url) if site_user.profile_picture else None,

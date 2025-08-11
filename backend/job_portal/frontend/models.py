@@ -53,3 +53,11 @@ class SectionContent(models.Model):
                 "icon_alternate_text": "Icon Alternate Text is not Provided"
             })
     
+
+class ContactUs(models.Model):
+    email = models.CharField(max_length = 100)
+    name = models.CharField(max_length = 100)
+    message = models.TextField(max_length = 500)
+
+    def _str_(self):
+        return self.email
