@@ -265,3 +265,21 @@ def get_user_profile(request):
 
     except Exception as e:
         return Response({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_user_profile(request):
+    try:
+        user = request.user
+        site_user = SiteUser.objects.get(user = user)
+
+        site_user.delete()
+        user.delete()
+        return JsonResponse({"message": "User profile deleted successfully"}, status=204)
+    
+    except SiteUser.DoesNotExist:
+        return JsonResponse({"error": "User profile not found"}, status=404)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
