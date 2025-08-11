@@ -11,7 +11,7 @@ from .models import *
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
-from .util import send_otp_mail
+from .util import send_otp_mail, send_otp_mail_threaded
 from django.utils import timezone
 from .models import SiteUser
 
@@ -27,7 +27,7 @@ def send_otp_for_register_email(request):
         if SiteUser.objects.filter(user__email = email).exists():
             return Response({"message": "This email already registered"})
 
-        mail_status = send_otp_mail(email)
+        mail_status = send_otp_mail_threaded(email)
 
         if mail_status == 0:
             return Response({"message": "Something went wrong sending the email"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

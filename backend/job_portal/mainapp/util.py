@@ -7,11 +7,12 @@ from rest_framework.response import Response
 from django.template.loader import render_to_string
 from .models import(VerifyEmailOtp,)
 from job_portal.settings import *
+from threading import Thread
 
 def send_otp_mail(email):
     otp = random.randint(100000, 999999)  
 
-    print("Generated OTP:", otp, "Length:", len(str(otp)))  # Debug log
+    print("Generated OTP:", otp, "Length:", len(str(otp)))
 
     expires_at = timezone.now() + timedelta(minutes=5)
 
@@ -37,6 +38,16 @@ def send_otp_mail(email):
     )
 
     return mail_status
+
+def send_otp_mail_threaded(email):
+    def run():
+        try:
+            send_otp_mail(email)
+        except Exception as e:
+            print(f"Failed to send OTP email to {email}: {e}")
+
+    thread = Thread(target=run)
+    thread.start()
 
 def send_registration_mail(user_instance):
     context = {
