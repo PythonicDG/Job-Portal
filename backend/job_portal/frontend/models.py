@@ -7,6 +7,7 @@ class PageSection(models.Model):
         ("banner", "Banner"),
         ("hero", "Hero"),
         ("contact_us", "Contact US"),
+        ("about_us", "About US"), 
         ("testimonial", "Testimonial"),
         ("other", "Other"),
     ]
