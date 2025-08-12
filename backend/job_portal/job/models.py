@@ -60,3 +60,40 @@ class SidebarMenu(models.Model):
 
     def __str__(self):
         return self.title
+
+class UserSavedJob(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    saved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'job')
+
+    def __str__(self):
+        return f"{self.user.username} saved {self.job.title}"
+
+class user_viewed_jobs(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    viewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'job')
+
+    def __str__(self):
+        return f"{self.user.username} viewed {self.job.title}"
+
+
+class user_applied_jobs_log(models.Model):
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    applied_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'job')
+
+    def __str__(self):
+        return f"{self.user.username} applied for {self.job.title}"
+
+
+

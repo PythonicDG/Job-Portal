@@ -5,8 +5,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from .utils import fetch_jobs, fetch_and_store_jobs
-from .models import Job, SidebarMenu
+from .models import Job, SidebarMenu, UserSavedJob
 from django.http import JsonResponse
+from headerfooter.models import CompanyInfo
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -96,12 +97,46 @@ def jobs_list(request):
 @api_view(['GET'])
 def sidebar_menu_list(request):
     menus = SidebarMenu.objects.all().order_by('order')
-    data = [
+    company_info = CompanyInfo.objects.first()
+
+    logo_url = company_info.logo.url if company_info and company_info.logo else None
+
+    menu_data = [
         {
             "title": menu.title,
             "url": menu.url,
-            "icon": menu.icon.url,
+            "icon": menu.icon.url if menu.icon else None
         }
         for menu in menus
     ]
-    return JsonResponse(data, safe=False)
+
+    return JsonResponse({
+        "logo": logo_url,
+        "menus": menu_data
+    })
+
+@api_view(['POST'])
+def save_jobs(request):
+    try:
+        if not request.user.is_authenticated:
+            return Response({"error": "User not authenticated"}, status = 401)
+
+        job_id = request.data.get('job_id')
+        job = Job.objects.get(job_id = job_id)
+
+        saved_job_instance, created = UserSavedJob.objects.get_or_create(
+            user = request.user,
+            job = job
+        )
+
+        if not created:
+            return Response({"message": "Job already saved"}, status=200)
+
+        return Response({"message": "Job saved successfully"}, status=201)
+
+    except Job.DoesNotExist:
+        return Response({"error": "Job not found"}, status=404)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
