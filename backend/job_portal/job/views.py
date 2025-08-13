@@ -94,7 +94,7 @@ def jobs_list(request):
     
     employment_types = list(set(
         Job.objects.values_list('employment_type', flat=True).exclude(employment_type__isnull=True) +
-        list(EmploymentType.objects.values_list('type', flat=True))
+        list(EmploymentType.objects.values_list('type', flat=True))))
     
     data = []
     for job in paginated_jobs:
