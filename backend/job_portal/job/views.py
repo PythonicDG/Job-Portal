@@ -52,8 +52,11 @@ def jobs_list(request):
         .order_by('-posted_at')
 
     paginator = PageNumberPagination()
-    paginator.page_size = 5  # 🔧 Change this as needed (e.g., 20 or 50)
+    paginator.page_size = 5  
+
     paginated_jobs = paginator.paginate_queryset(jobs, request)
+    total_count = jobs.count()
+    total_pages = ceil(total_count / paginator.page_size) if paginator.page_size else 1
 
     data = []
     for job in paginated_jobs:
@@ -63,9 +66,10 @@ def jobs_list(request):
             "description": job.description,
             "is_remote": job.is_remote,
             "employment_type": job.employment_type,
+            "employment_types": [
+                {"id": et.id, "type": et.type} for et in job.employment_types.all()
+            ],
             "posted_at": job.posted_at.isoformat() if job.posted_at else None,
-            "posted_timestamp": job.posted_timestamp,
-            "google_link": job.google_link,
             "min_salary": job.min_salary,
             "max_salary": job.max_salary,
             "salary_period": job.salary_period,
@@ -76,12 +80,9 @@ def jobs_list(request):
                 "website": job.employer.website,
             },
             "location": {
-                "id": job.location.id if job.location else None,
                 "city": job.location.city if job.location else None,
                 "state": job.location.state if job.location else None,
                 "country": job.location.country if job.location else None,
-                "latitude": job.location.latitude if job.location else None,
-                "longitude": job.location.longitude if job.location else None,
             } if job.location else None,
             "apply_options": [
                 {
@@ -91,15 +92,16 @@ def jobs_list(request):
                     "is_direct": option.is_direct,
                 } for option in job.apply_options.all()
             ],
-            "employment_types": [
-                {
-                    "id": et.id,
-                    "type": et.type,
-                } for et in job.employment_types.all()
-            ],
         })
 
-    return paginator.get_paginated_response(data)
+    return Response({
+        "count": total_count,
+        "total_pages": total_pages,
+        "current_page": request.GET.get('page', 1),
+        "next": paginator.get_next_link(),
+        "previous": paginator.get_previous_link(),
+        "results": data
+    })
 
 @api_view(['GET'])
 def sidebar_menu_list(request):
