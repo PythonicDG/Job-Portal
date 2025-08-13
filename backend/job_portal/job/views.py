@@ -104,10 +104,9 @@ def jobs_list(request):
             "description": job.description,
             "is_remote": job.is_remote,
             "employment_type": job.employment_type,
-            "employment_types": [
-                {"id": et.id, "type": et.type} for et in job.employment_types.all()
-            ],
             "posted_at": job.posted_at.isoformat() if job.posted_at else None,
+            "posted_timestamp": job.posted_timestamp,
+            "google_link": job.google_link,
             "min_salary": job.min_salary,
             "max_salary": job.max_salary,
             "salary_period": job.salary_period,
@@ -118,6 +117,7 @@ def jobs_list(request):
                 "website": job.employer.website,
             },
             "location": {
+                "id": job.location.id if job.location else None,
                 "city": job.location.city if job.location else None,
                 "state": job.location.state if job.location else None,
                 "country": job.location.country if job.location else None,
@@ -130,10 +130,8 @@ def jobs_list(request):
                     "is_direct": option.is_direct,
                 } for option in job.apply_options.all()
             ],
-            "skills_required": job.skills_required.split(',') if job.skills_required else [],
-            "experience_required": job.experience_required,
-            "education_required": job.education_required
         })
+
 
     return Response({
         "count": queryset.count(),
