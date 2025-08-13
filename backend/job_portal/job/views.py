@@ -5,9 +5,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from .utils import fetch_jobs, fetch_and_store_jobs
-from .models import Job, SidebarMenu, UserSavedJob
+from .models import Job, SidebarMenu, UserSavedJob, user_viewed_jobs
 from django.http import JsonResponse
 from headerfooter.models import CompanyInfo
+from rest_framework.pagination import PageNumberPagination
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -46,10 +47,16 @@ def sync_jobs(request):
 
 @api_view(['GET'])
 def jobs_list(request):
-    jobs = Job.objects.all().select_related('employer', 'location').prefetch_related('apply_options', 'employment_types').order_by('-posted_at')
+    jobs = Job.objects.all().select_related('employer', 'location') \
+        .prefetch_related('apply_options', 'employment_types') \
+        .order_by('-posted_at')
+
+    paginator = PageNumberPagination()
+    paginator.page_size = 5  # 🔧 Change this as needed (e.g., 20 or 50)
+    paginated_jobs = paginator.paginate_queryset(jobs, request)
 
     data = []
-    for job in jobs:
+    for job in paginated_jobs:
         data.append({
             "job_id": job.job_id,
             "title": job.title,
@@ -92,7 +99,7 @@ def jobs_list(request):
             ],
         })
 
-    return Response(data)
+    return paginator.get_paginated_response(data)
 
 @api_view(['GET'])
 def sidebar_menu_list(request):
@@ -140,3 +147,68 @@ def save_jobs(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+@api_view(['DELETE'])
+def unsave_job(request, job_id):
+    try:
+        job = Job.objects.get(job_id=job_id)
+
+        saved_job = SavedJob.objects.get(user=request.user, job=job)
+        saved_job.delete()
+
+        return Response({"message": "Job unsaved successfully"}, status=204)
+
+    except Job.DoesNotExist:
+        return Response({"error": "Job not found"}, status=404)
+    except SavedJob.DoesNotExist:
+        return Response({"error": "Saved job not found for user"}, status=404)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+@api_view(['POST'])
+def view_job(request):
+    try:
+        if not request.user.is_authenticated:
+            return Response({"error": "User not authenticated"}, status = 401)
+
+        job_id = request.data.get('job_id')
+        job = Job.objects.get(job_id = job_id)
+
+        saved_job_instance, created = user_viewed_jobs.objects.get_or_create(
+            user = request.user,
+            job = job
+        )
+
+        if not created:
+            return Response({"message": "Job already viewed"}, status=200)
+
+        return Response({"message": "Job viewed successfully"}, status=201)
+
+    except Job.DoesNotExist:
+        return Response({"error": "Job not found"}, status=404)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+def recent_viewed_jobs(request):
+    try:
+        if not request.user.is_authenticated:
+            return Response({"error": "User not authenticated"}, status=401)
+
+        recent_viewed = user_viewed_jobs.objects.filter(user=request.user).order_by('-viewed_at')[:5]
+        
+        job_list = []
+        for entry in recent_viewed:
+            job = entry.job
+            job_list.append({
+                "job_id": job.job_id,
+                "title": job.title,
+                "company": job.employer.name, 
+                "viewed_at": entry.viewed_at
+            })
+
+        return Response({"recent_jobs": job_list}, status=200)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)

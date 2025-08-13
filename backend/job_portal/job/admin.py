@@ -35,7 +35,7 @@ class SidebarMenuAdmin(admin.ModelAdmin):
 
 @admin.register(UserSavedJob)
 class UserSavedJobAdmin(admin.ModelAdmin):
-    list_display = ('user', 'job', 'saved_at')
+    list_display = ('user', 'job', 'saved_at', 'job__id')
     list_filter = ('user',)
     search_fields = ('user__username', 'job__title')
 
