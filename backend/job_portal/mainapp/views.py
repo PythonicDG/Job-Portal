@@ -11,7 +11,7 @@ from .models import *
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
-from .util import send_otp_mail, send_otp_mail_threaded
+from .util import send_otp_mail, send_otp_mail_threaded, send_forgot_password_otp
 from django.utils import timezone
 from .models import SiteUser
 
