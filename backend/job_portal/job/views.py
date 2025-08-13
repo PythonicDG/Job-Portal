@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from headerfooter.models import CompanyInfo
 from rest_framework.pagination import PageNumberPagination
 from math import ceil
+from django.db.models import Q
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -46,19 +47,55 @@ def sync_jobs(request):
             "message": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @api_view(['GET'])
 def jobs_list(request):
-    jobs = Job.objects.all().select_related('employer', 'location') \
-        .prefetch_related('apply_options', 'employment_types') \
-        .order_by('-posted_at')
-
+    queryset = Job.objects.all().select_related('employer', 'location') \
+        .prefetch_related('apply_options', 'employment_types')
+    
+    search = request.GET.get('search', '')
+    location = request.GET.get('location', '')
+    employment_type = request.GET.get('employment_type', '')
+    min_salary = request.GET.get('min_salary')
+    is_remote = request.GET.get('is_remote')
+    
+    if search:
+        queryset = queryset.filter(
+            Q(title__icontains=search) |
+            Q(description__icontains=search) |
+            Q(employer__name__icontains=search) |
+            Q(skills_required__icontains=search)
+        )
+    
+    if location:
+        queryset = queryset.filter(
+            Q(location__city__icontains=location) |
+            Q(location__state__icontains=location) |
+            Q(location__country__icontains=location)
+        )
+    
+    if employment_type:
+        queryset = queryset.filter(
+            Q(employment_type__icontains=employment_type) |
+            Q(employment_types__type__icontains=employment_type)
+        ).distinct()
+    
+    if min_salary:
+        queryset = queryset.filter(min_salary__gte=min_salary)
+    
+    if is_remote:
+        queryset = queryset.filter(is_remote=True if is_remote.lower() == 'true' else False)
+    
+    queryset = queryset.order_by('-posted_at')
+    
     paginator = PageNumberPagination()
-    paginator.page_size = 5  
-
-    paginated_jobs = paginator.paginate_queryset(jobs, request)
-    total_count = jobs.count()
-    total_pages = ceil(total_count / paginator.page_size) if paginator.page_size else 1
-
+    paginator.page_size = 10  
+    paginated_jobs = paginator.paginate_queryset(queryset, request)
+    
+    employment_types = list(set(
+        Job.objects.values_list('employment_type', flat=True).exclude(employment_type__isnull=True) +
+        list(EmploymentType.objects.values_list('type', flat=True))
+    
     data = []
     for job in paginated_jobs:
         data.append({
@@ -93,16 +130,80 @@ def jobs_list(request):
                     "is_direct": option.is_direct,
                 } for option in job.apply_options.all()
             ],
+            "skills_required": job.skills_required.split(',') if job.skills_required else [],
+            "experience_required": job.experience_required,
+            "education_required": job.education_required
         })
 
     return Response({
-        "count": total_count,
-        "total_pages": total_pages,
+        "count": queryset.count(),
+        "total_pages": ceil(queryset.count() / paginator.page_size) if paginator.page_size else 1,
         "current_page": request.GET.get('page', 1),
         "next": paginator.get_next_link(),
         "previous": paginator.get_previous_link(),
+        "filters": {
+            "employment_types": sorted(list(set(filter(None, employment_types)))),
+        },
         "results": data
     })
+
+# @api_view(['GET'])
+# def jobs_list(request):
+#     jobs = Job.objects.all().select_related('employer', 'location') \
+#         .prefetch_related('apply_options', 'employment_types') \
+#         .order_by('-posted_at')
+
+#     paginator = PageNumberPagination()
+#     paginator.page_size = 5  
+
+#     paginated_jobs = paginator.paginate_queryset(jobs, request)
+#     total_count = jobs.count()
+#     total_pages = ceil(total_count / paginator.page_size) if paginator.page_size else 1
+
+#     data = []
+#     for job in paginated_jobs:
+#         data.append({
+#             "job_id": job.job_id,
+#             "title": job.title,
+#             "description": job.description,
+#             "is_remote": job.is_remote,
+#             "employment_type": job.employment_type,
+#             "employment_types": [
+#                 {"id": et.id, "type": et.type} for et in job.employment_types.all()
+#             ],
+#             "posted_at": job.posted_at.isoformat() if job.posted_at else None,
+#             "min_salary": job.min_salary,
+#             "max_salary": job.max_salary,
+#             "salary_period": job.salary_period,
+#             "employer": {
+#                 "id": job.employer.id,
+#                 "name": job.employer.name,
+#                 "employer_logo": job.employer.employer_logo.url if job.employer.employer_logo else None,
+#                 "website": job.employer.website,
+#             },
+#             "location": {
+#                 "city": job.location.city if job.location else None,
+#                 "state": job.location.state if job.location else None,
+#                 "country": job.location.country if job.location else None,
+#             } if job.location else None,
+#             "apply_options": [
+#                 {
+#                     "id": option.id,
+#                     "publisher": option.publisher,
+#                     "apply_link": option.apply_link,
+#                     "is_direct": option.is_direct,
+#                 } for option in job.apply_options.all()
+#             ],
+#         })
+
+#     return Response({
+#         "count": total_count,
+#         "total_pages": total_pages,
+#         "current_page": request.GET.get('page', 1),
+#         "next": paginator.get_next_link(),
+#         "previous": paginator.get_previous_link(),
+#         "results": data
+#     })
 
 @api_view(['GET'])
 def sidebar_menu_list(request):
