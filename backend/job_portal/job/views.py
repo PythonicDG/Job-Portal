@@ -92,9 +92,14 @@ def jobs_list(request):
     paginator.page_size = 10  
     paginated_jobs = paginator.paginate_queryset(queryset, request)
     
-    employment_types = list(set(
-        Job.objects.values_list('employment_type', flat=True).exclude(employment_type__isnull=True) +
-        list(EmploymentType.objects.values_list('type', flat=True))))
+    employment_types = sorted(list(set(
+            filter(
+                None,
+                list(Job.objects.values_list('employment_type', flat=True).exclude(employment_type__isnull=True)) +
+                list(EmploymentType.objects.values_list('type', flat=True))
+            )
+        )))
+
     
     data = []
     for job in paginated_jobs:
