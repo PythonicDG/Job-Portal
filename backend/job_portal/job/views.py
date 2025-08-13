@@ -9,6 +9,7 @@ from .models import Job, SidebarMenu, UserSavedJob, user_viewed_jobs
 from django.http import JsonResponse
 from headerfooter.models import CompanyInfo
 from rest_framework.pagination import PageNumberPagination
+from math import ceil
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
