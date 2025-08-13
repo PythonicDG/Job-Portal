@@ -11,7 +11,7 @@ from .models import *
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
-from .util import send_otp_mail, send_otp_mail_threaded, send_forgot_password_otp
+from .util import send_otp_mail, send_otp_mail_threaded, send_forgot_password_otp, send_otp_mail_threaded_forgot
 from django.utils import timezone
 from .models import SiteUser
 
@@ -183,7 +183,7 @@ def send_otp_forgot_password(request):
         
         first_name = user_instance.first_name
         
-        mail_status = send_forgot_password_otp(email, first_name)
+        mail_status = send_otp_mail_threaded_forgot(email, first_name)
 
         return JsonResponse({"success":"True","message": "OTP sent Successfull"})
         

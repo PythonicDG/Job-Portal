@@ -71,7 +71,7 @@ def send_registration_mail(user_instance):
     
 def send_forgot_password_otp(email, first_name):
     
-    otp = random.randint(10000, 99999)
+    otp = random.randint(100000, 999999)
     expires_at = timezone.now() + timedelta(minutes=5)
 
     otp_instance, is_created = VerifyEmailOtp.objects.update_or_create(
@@ -101,3 +101,13 @@ def send_forgot_password_otp(email, first_name):
 
 def dipak(database):
     pass
+
+def send_otp_mail_threaded_forgot(email, first_name):
+    def run():
+        try:
+            send_forgot_password_otp(email, first_name)
+        except Exception as e:
+            print(f"Failed to send OTP email to {email}: {e}")
+
+    thread = Thread(target=run)
+    thread.start()
