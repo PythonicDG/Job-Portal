@@ -185,7 +185,7 @@ def send_otp_forgot_password(request):
         
         mail_status = send_forgot_password_otp(email, first_name)
 
-        return JsonResponse({"message": "OTP sent Successfull"})
+        return JsonResponse({"success":"True","message": "OTP sent Successfull"})
         
     except Exception as e:
         return JsonResponse({"error": str(e)})
