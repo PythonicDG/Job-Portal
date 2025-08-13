@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from .utils import fetch_jobs, fetch_and_store_jobs
-from .models import Job, SidebarMenu, UserSavedJob, user_viewed_jobs
+from .models import Job, SidebarMenu, UserSavedJob, user_viewed_jobs, EmploymentType
 from django.http import JsonResponse
 from headerfooter.models import CompanyInfo
 from rest_framework.pagination import PageNumberPagination
