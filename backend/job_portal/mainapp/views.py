@@ -14,6 +14,7 @@ from rest_framework.permissions import AllowAny
 from .util import send_otp_mail, send_otp_mail_threaded, send_forgot_password_otp, send_otp_mail_threaded_forgot
 from django.utils import timezone
 from .models import SiteUser
+from django.contrib.auth.hashers import make_password
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -63,7 +64,7 @@ def verify_otp_email_verification(request):
         
         otp_instance.save()
 
-        return JsonResponse({"message": "OTP verified Success"})
+        return JsonResponse({"message": "OTP verified Success", "success": "true"})
     
     except Exception as e:
         return JsonResponse({"error": str(e)})
@@ -217,7 +218,7 @@ def verify_forgot_password_otp(request):
         
         otp_instance.save()
 
-        return JsonResponse({"message": "verification success"})
+        return JsonResponse({"message": "verification success", "success": "true"})
 
     except Exception as e:
         return JsonResponse({"message":str(e)})
@@ -288,3 +289,30 @@ def delete_user_profile(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@api_view(['POST'])
+def update_password(request):
+    try:
+        email = request.data.get('email')
+        new_password = request.data.get('password')
+
+        if not email or not new_password:
+            return Response({'error': 'Email and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+
+            if user.check_password(new_password):
+                return Response({'error': 'New password cannot be the same as the old password'}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.password = make_password(new_password)
+            user.save()
+
+            return Response({'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
