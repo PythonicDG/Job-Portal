@@ -292,6 +292,7 @@ def delete_user_profile(request):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def update_password(request):
     try:
         email = request.data.get('email')
