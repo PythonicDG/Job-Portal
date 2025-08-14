@@ -7,7 +7,7 @@ from headerfooter.models import SubMenu
 from .models import *
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
-
+from .utils import send_contact_email
 
 
 @api_view(['GET'])
@@ -67,8 +67,58 @@ def fetch_records(request):
     
     return JsonResponse(data)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def contact_us(request):
+    try:
+        email = request.data.get("email")
+        name = request.data.get("name")
+        message = request.data.get("message")
+        
+        if not email:
+            return Response({"error": "email required"})
+        
+        if not name:
+            return Response({"error": "name required"})
+        
+        contact_us_instance = ContactUs.objects.create(
+            email=email,
+            name=name,
+            message=message
+        )
 
+        send_contact_email(name, email, message)
 
+        return JsonResponse({"message": "success"})
 
+    except Exception as e:
+        return JsonResponse({"Error": str(e)})
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def faq_list(request):
+    sections_data = []
 
+    for section in FAQSection.objects.all():
+        categories_data = []
+
+        for category in section.categories.all():
+            questions_data = []
+
+            for q in category.questions.all():
+                questions_data.append({
+                    "question": q.question,
+                    "answer": q.answer,
+                })
+
+            categories_data.append({
+                "title": category.title,
+                "questions": questions_data,
+            })
+
+        sections_data.append({
+            "title": section.title,
+            "categories": categories_data,
+        })
+
+    return JsonResponse({"sections": sections_data})

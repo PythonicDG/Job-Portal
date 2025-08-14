@@ -4,5 +4,7 @@ from . import views
 
 urlpatterns = [
     path("fetch_records/", views.fetch_records),
+    path("contact_us/", views.contact_us),
+    path("faq_list/", views.faq_list)
     
 ]

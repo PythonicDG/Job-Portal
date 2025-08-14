@@ -62,3 +62,26 @@ class ContactUs(models.Model):
 
     def _str_(self):
         return self.email
+
+class FAQSection(models.Model):
+    title = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.title
+
+
+class FAQCategory(models.Model):
+    section = models.ForeignKey(FAQSection, on_delete=models.CASCADE, related_name='categories')
+    title = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f"{self.section.title} - {self.title}"
+
+
+class FAQQuestion(models.Model):
+    category = models.ForeignKey(FAQCategory, on_delete=models.CASCADE, related_name='questions')
+    question = models.TextField()
+    answer = models.TextField()
+
+    def __str__(self):
+        return self.question
