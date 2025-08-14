@@ -51,6 +51,7 @@ def sync_jobs(request):
 
 
 @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
 def jobs_list(request):
     queryset = Job.objects.all().select_related('employer', 'location') \
         .prefetch_related('apply_options', 'employment_types')
@@ -266,7 +267,7 @@ def recent_viewed_jobs(request):
         return Response({"error": str(e)}, status=500)
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def dashboard_data(request):
     user = request.user
 
