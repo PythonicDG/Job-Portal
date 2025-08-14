@@ -45,25 +45,28 @@ def download_image_from_url(url):
         return None
 
 
+from django.db import transaction
+
 def fetch_and_store_jobs(response):
+    apply_options_to_create = []
+    emp_types_to_create = []
+
     for job_data in response.get('data', []):
         job_id = job_data['job_id']
-        if Job.objects.filter(job_id=job_id).exists():
-            continue
 
-        logo_file = download_image_from_url(job_data.get('employer_logo'))
-
-        employer, created = Employer.objects.get_or_create(
+        employer, _ = Employer.objects.update_or_create(
             name=job_data['employer_name'],
-            website=job_data.get('employer_website'),
+            defaults={'website': job_data.get('employer_website')}
         )
-
-        if logo_file and (created or not employer.employer_logo):
-            employer.employer_logo.save(logo_file.name, logo_file)
+        logo_url = job_data.get('employer_logo')
+        if logo_url:
+            logo_file = download_image_from_url(logo_url)
+            if logo_file:
+                employer.employer_logo.save(logo_file.name, logo_file, save=True)
 
         location = None
         if job_data.get('job_city') and job_data.get('job_country'):
-            location, _ = Location.objects.get_or_create(
+            location, _ = Location.objects.update_or_create(
                 city=job_data['job_city'],
                 state=job_data.get('job_state'),
                 country=job_data['job_country'],
@@ -77,33 +80,40 @@ def fetch_and_store_jobs(response):
             if apply_data.get('is_direct'):
                 apply_link = apply_data.get('apply_link')
                 break
-
         if not apply_link and job_data.get('apply_options'):
             apply_link = job_data['apply_options'][0].get('apply_link')
 
-        job = Job.objects.create(
+        job, created = Job.objects.update_or_create(
             job_id=job_id,
-            title=job_data['job_title'],
-            description=job_data['job_description'],
-            is_remote=job_data['job_is_remote'],
-            employment_type=job_data.get('job_employment_type') or '',
-            posted_at=job_data['job_posted_at_datetime_utc'],
-            posted_timestamp=job_data['job_posted_at_timestamp'],
-            google_link=apply_link or '',
-            min_salary=job_data.get('job_min_salary'),
-            max_salary=job_data.get('job_max_salary'),
-            salary_period=job_data.get('job_salary_period') or '',
-            employer=employer,
-            location=location
+            defaults={
+                'title': job_data['job_title'],
+                'description': job_data['job_description'],
+                'is_remote': job_data['job_is_remote'],
+                'employment_type': job_data.get('job_employment_type') or '',
+                'posted_at': job_data['job_posted_at_datetime_utc'],
+                'posted_timestamp': job_data['job_posted_at_timestamp'],
+                'google_link': apply_link or '',
+                'min_salary': job_data.get('job_min_salary'),
+                'max_salary': job_data.get('job_max_salary'),
+                'salary_period': job_data.get('job_salary_period') or '',
+                'employer': employer,
+                'location': location
+            }
         )
 
-        for apply_data in job_data.get('apply_options', []):
-            ApplyOption.objects.create(
-                job=job,
-                publisher=apply_data['publisher'],
-                apply_link=apply_data['apply_link'],
-                is_direct=apply_data['is_direct']
-            )
+        if created:
+            for apply_data in job_data.get('apply_options', []):
+                apply_options_to_create.append(ApplyOption(
+                    job=job,
+                    publisher=apply_data['publisher'],
+                    apply_link=apply_data['apply_link'],
+                    is_direct=apply_data['is_direct']
+                ))
 
-        for emp_type in job_data.get('job_employment_types', []):
-            EmploymentType.objects.create(job=job, type=emp_type)
+            for emp_type in job_data.get('job_employment_types', []):
+                emp_types_to_create.append(EmploymentType(job=job, type=emp_type))
+
+    if apply_options_to_create:
+        ApplyOption.objects.bulk_create(apply_options_to_create, ignore_conflicts=True)
+    if emp_types_to_create:
+        EmploymentType.objects.bulk_create(emp_types_to_create, ignore_conflicts=True)
