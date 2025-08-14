@@ -310,7 +310,7 @@ def update_password(request):
             user.password = make_password(new_password)
             user.save()
 
-            return Response({'message': 'Password updated successfully'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Password updated successfully', 'success': 'true'}, status=status.HTTP_200_OK)
 
         except User.DoesNotExist:
             return Response({'error': 'User with this email does not exist'}, status=status.HTTP_404_NOT_FOUND)
