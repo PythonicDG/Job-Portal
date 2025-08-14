@@ -10,5 +10,6 @@ urlpatterns = [
     path("get_user_profile/", views.get_user_profile),
     path("delete_user_profile/", views.delete_user_profile),
     path("send_otp_forgot_password/", views.send_otp_forgot_password),
-    path("verify_forgot_password_otp/", views.verify_forgot_password_otp)
+    path("verify_forgot_password_otp/", views.verify_forgot_password_otp),
+    path("update_password/", views.update_password)
 ]
