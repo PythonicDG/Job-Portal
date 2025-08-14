@@ -11,7 +11,8 @@ from headerfooter.models import CompanyInfo
 from rest_framework.pagination import PageNumberPagination
 from math import ceil
 from django.db.models import Q
-from .serializers import JobSerializer
+from .serializer import JobSerializer
+from rest_framework.permissions import IsAuthenticated
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
