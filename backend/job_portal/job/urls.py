@@ -8,5 +8,6 @@ urlpatterns = [
     path('save_jobs/', views.save_jobs, name='save-jobs'),
     path('unsave_job/<str:job_id>/', views.unsave_job),
     path('view_job/', views.view_job),
-    path('recent_viewed_jobs/', views.recent_viewed_jobs)
+    path('recent_viewed_jobs/', views.recent_viewed_jobs),
+    path('dashboard_data/', views.dashboard_data)
 ]

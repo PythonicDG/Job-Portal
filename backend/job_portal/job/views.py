@@ -11,6 +11,7 @@ from headerfooter.models import CompanyInfo
 from rest_framework.pagination import PageNumberPagination
 from math import ceil
 from django.db.models import Q
+from .serializers import JobSerializer
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -262,3 +263,30 @@ def recent_viewed_jobs(request):
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_data(request):
+    user = request.user
+
+    viewed_count = user_viewed_jobs.objects.filter(user=user).count()
+
+    saved_count = UserSavedJob.objects.filter(user=user).count()
+
+    recent_viewed = (
+        user_viewed_jobs.objects
+        .filter(user=user)
+        .select_related('job', 'job__employer', 'job__location')
+        .order_by('-viewed_at')[:5]
+    )
+    recent_jobs_data = JobSerializer([view.job for view in recent_viewed], many=True).data
+
+    recommended_jobs = Job.objects.all().order_by('-created_at')[:5]
+    recommended_jobs_data = JobSerializer(recommended_jobs, many=True).data
+
+    return Response({
+        "viewed_jobs_count": viewed_count,
+        "saved_jobs_count": saved_count,
+        "recent_viewed_jobs": recent_jobs_data,
+        "recommended_jobs": recommended_jobs_data
+    })
