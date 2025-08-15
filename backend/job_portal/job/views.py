@@ -13,6 +13,7 @@ from math import ceil
 from django.db.models import Q
 from .serializer import JobSerializer
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.postgres.search import SearchVector
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -56,19 +57,24 @@ def jobs_list(request):
     queryset = Job.objects.all().select_related('employer', 'location') \
         .prefetch_related('apply_options', 'employment_types')
     
-    search = request.GET.get('search', '')
+    search = request.GET.get('search', '').strip()
     location = request.GET.get('location', '')
     employment_type = request.GET.get('employment_type', '')
     min_salary = request.GET.get('min_salary')
     is_remote = request.GET.get('is_remote')
     
+    # if search:
+    #     queryset = queryset.filter(
+    #         Q(title__icontains=search) |
+    #         Q(description__icontains=search) |
+    #         Q(employer__name__icontains=search) |
+    #         Q(skills_required__icontains=search)
+    #     ).distinct()
+
     if search:
-        queryset = queryset.filter(
-            Q(title__icontains=search) |
-            Q(description__icontains=search) |
-            Q(employer__name__icontains=search) |
-            Q(skills_required__icontains=search)
-        ).distinct()
+        queryset = queryset.annotate(
+            search_vector=SearchVector('title', 'description', 'employer__name', 'skills_required')
+        ).filter(search_vector__icontains=search)
     
     if location:
         queryset = queryset.filter(
