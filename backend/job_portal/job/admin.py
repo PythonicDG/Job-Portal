@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Employer, Location, Job, ApplyOption, EmploymentType, SidebarMenu, UserSavedJob, user_viewed_jobs, user_applied_jobs_log
+from .models import (Employer, Location, Job, ApplyOption, EmploymentType, SidebarMenu, UserSavedJob, 
+                        user_viewed_jobs, user_applied_jobs_log, ProfileButtonItem)
 
 @admin.register(Employer)
 class EmployerAdmin(admin.ModelAdmin):
@@ -50,3 +51,10 @@ class UserAppliedJobsAdmin(admin.ModelAdmin):
     list_display = ('user', 'job', 'applied_at')
     list_filter = ('user',)
     search_fields = ('user__username', 'job__title')
+
+@admin.register(ProfileButtonItem)
+class SidebarItemAdmin(admin.ModelAdmin):
+    list_display = ('id', 'label', 'type', 'visible', 'order')
+    list_filter = ('type', 'visible')
+    search_fields = ('label', 'path', 'action')
+    ordering = ('order',)

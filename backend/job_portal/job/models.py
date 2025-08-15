@@ -96,4 +96,26 @@ class user_applied_jobs_log(models.Model):
         return f"{self.user.username} applied for {self.job.title}"
 
 
+class ProfileButtonItem(models.Model):
+    LINK = "link"
+    ACTION = "action"
+    DIVIDER = "divider"
+    ITEM_TYPE_CHOICES = [
+        (LINK, "Link"),
+        (ACTION, "Action"),
+        (DIVIDER, "Divider"),
+    ]
 
+    label = models.CharField(max_length=255, blank=True, null=True)
+    icon = models.ImageField(upload_to='profile_button_icons/', blank=True, null=True)
+    path = models.CharField(max_length=255, blank=True, null=True)
+    action = models.CharField(max_length=50, blank=True, null=True)
+    type = models.CharField(max_length=20, choices=ITEM_TYPE_CHOICES)
+    visible = models.BooleanField(default=True)
+    order = models.PositiveIntegerField()
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.label or f"{self.type} - {self.id}"

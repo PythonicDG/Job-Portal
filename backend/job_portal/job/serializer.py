@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Job, Employer, Location, ApplyOption
+from .models import Job, Employer, Location, ApplyOption, ProfileButtonItem
 
 class EmployerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,3 +34,8 @@ class JobSerializer(serializers.ModelSerializer):
             return ApplyOptionSerializer(first_option).data
         return None
     
+
+class ProfileButtonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfileButtonItem
+        fields = ['id', 'label', 'icon', 'path', 'action', 'type', 'visible', 'order']

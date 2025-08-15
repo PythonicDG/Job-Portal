@@ -5,13 +5,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from .utils import fetch_jobs, fetch_and_store_jobs
-from .models import Job, SidebarMenu, UserSavedJob, user_viewed_jobs, EmploymentType
+from .models import Job, SidebarMenu, UserSavedJob, user_viewed_jobs, EmploymentType, ProfileButtonItem
 from django.http import JsonResponse
 from headerfooter.models import CompanyInfo
 from rest_framework.pagination import PageNumberPagination
 from math import ceil
 from django.db.models import Q
-from .serializer import JobSerializer
+from .serializer import JobSerializer, ProfileButtonSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.postgres.search import SearchVector
 import re
@@ -232,6 +232,20 @@ def unsave_job(request, job_id):
         return Response({"error": str(e)}, status=500)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_saved_jobs(request):
+    user = request.user
+    saved_jobs = UserSavedJob.objects.filter(user=user).select_related('job__employer', 'job__location').prefetch_related('job__apply_options')
+
+    jobs_data = [JobSerializer(sj.job).data for sj in saved_jobs]
+
+    return Response({
+        "status": "success",
+        "user": user.username,
+        "saved_jobs": jobs_data
+    })
+
 @api_view(['POST'])
 def view_job(request):
     try:
@@ -305,4 +319,13 @@ def dashboard_data(request):
         "saved_jobs_count": saved_count,
         "recent_viewed_jobs": recent_jobs_data,
         "recommended_jobs": recommended_jobs_data
+    })
+
+@api_view(['GET'])
+def profile_button_items(request):
+    items = ProfileButtonItem.objects.filter(visible=True).order_by('order')
+    serializer = ProfileButtonSerializer(items, many=True)
+    return Response({
+        "status": "success",
+        "items": serializer.data
     })
