@@ -14,6 +14,7 @@ from django.db.models import Q
 from .serializer import JobSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.postgres.search import SearchVector
+import re
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -50,74 +51,78 @@ def sync_jobs(request):
             "message": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+def str_to_bool(val):
+    if val is None:
+        return None
+    v = str(val).strip().lower()
+    if v in ("1", "true", "yes", "on"):  return True
+    if v in ("0", "false", "no", "off"): return False
+    return None
 
 @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def jobs_list(request):
-    queryset = Job.objects.all().select_related('employer', 'location') \
-        .prefetch_related('apply_options', 'employment_types')
-    
-    search = request.GET.get('search', '').strip()
-    location = request.GET.get('location', '')
-    employment_type = request.GET.get('employment_type', '')
+    qs = Job.objects.select_related('employer', 'location') \
+        .prefetch_related('apply_options')  
+
+    search = (request.GET.get('search') or '').strip()
+    location = (request.GET.get('location') or '').strip()
+    emp_type = (request.GET.get('employment_type') or '').strip()
     min_salary = request.GET.get('min_salary')
-    is_remote = request.GET.get('is_remote')
-    
-    # if search:
-    #     queryset = queryset.filter(
-    #         Q(title__icontains=search) |
-    #         Q(description__icontains=search) |
-    #         Q(employer__name__icontains=search) |
-    #         Q(skills_required__icontains=search)
-    #     ).distinct()
+    is_remote = str_to_bool(request.GET.get('is_remote'))
 
     if search:
-        queryset = queryset.annotate(
-            search_vector=SearchVector('title', 'description', 'employer__name', 'skills_required')
-        ).filter(search_vector__icontains=search)
-    
+        terms = [t for t in re.split(r'\s+', search) if t]
+        for term in terms:
+            qs = qs.filter(
+                Q(title__icontains=term) |
+                Q(description__icontains=term) |
+                Q(location__state__icontains=term) |
+                Q(location__country__icontains=term)
+            )
+
     if location:
-        queryset = queryset.filter(
+        qs = qs.filter(
             Q(location__city__icontains=location) |
             Q(location__state__icontains=location) |
             Q(location__country__icontains=location)
         )
-    
-    if employment_type:
-        queryset = queryset.filter(
-            Q(employment_type__icontains=employment_type) |
-            Q(employment_types__type__icontains=employment_type)
-        ).distinct()
-    
-    if min_salary:
-        try:
-            min_salary_value = int(min_salary)
-            queryset = queryset.filter(min_salary__gte=min_salary_value)
-        except ValueError:
-            pass
-    
-    if is_remote is not None:
-            is_remote_bool = str(is_remote).lower() == 'true'
-            queryset = queryset.filter(is_remote=is_remote_bool)
-    
-    queryset = queryset.order_by('-posted_at')
-    
-    paginator = PageNumberPagination()
-    paginator.page_size = 10  
-    paginated_jobs = paginator.paginate_queryset(queryset, request)
-    
-    employment_types = sorted(list(set(
-            filter(
-                None,
-                list(Job.objects.values_list('employment_type', flat=True).exclude(employment_type__isnull=True)) +
-                list(EmploymentType.objects.values_list('type', flat=True))
-            )
-        )))
 
-    
-    data = []
-    for job in paginated_jobs:
-        data.append({
+    if emp_type:
+        qs = qs.filter(
+            Q(employment_type__icontains=emp_type) |
+            Q(employment_types__type__icontains=emp_type) 
+        )
+
+    if min_salary not in (None, ''):
+        try:
+            qs = qs.filter(min_salary__gte=float(min_salary))
+        except (TypeError, ValueError):
+            pass
+
+    if is_remote is not None:
+        qs = qs.filter(is_remote=is_remote)
+
+    qs = qs.distinct().order_by('-posted_at', '-id')
+
+    paginator = PageNumberPagination()
+    paginator.page_size = 10
+    page_objs = paginator.paginate_queryset(qs, request)
+
+    job_types = list(
+        Job.objects.exclude(employment_type__isnull=True)
+                   .exclude(employment_type__exact='')
+                   .values_list('employment_type', flat=True)
+    )
+    try:
+        extra_types = list(EmploymentType.objects.values_list('type', flat=True))
+    except Exception:
+        extra_types = []
+    employment_types = sorted(set(filter(None, job_types + extra_types)))
+
+    results = []
+    for job in page_objs:
+        results.append({
             "job_id": job.job_id,
             "title": job.title,
             "description": job.description,
@@ -132,36 +137,34 @@ def jobs_list(request):
             "employer": {
                 "id": job.employer.id,
                 "name": job.employer.name,
-                "employer_logo": job.employer.employer_logo.url if job.employer.employer_logo else None,
+                "employer_logo": job.employer.employer_logo.url if getattr(job.employer, "employer_logo", None) else None,
                 "website": job.employer.website,
             },
-            "location": {
-                "id": job.location.id if job.location else None,
-                "city": job.location.city if job.location else None,
-                "state": job.location.state if job.location else None,
-                "country": job.location.country if job.location else None,
-            } if job.location else None,
+            "location": ({
+                "id": job.location.id,
+                "city": job.location.city,
+                "state": job.location.state,
+                "country": job.location.country,
+            } if job.location else None),
             "apply_options": [
                 {
-                    "id": option.id,
-                    "publisher": option.publisher,
-                    "apply_link": option.apply_link,
-                    "is_direct": option.is_direct,
-                } for option in job.apply_options.all()
+                    "id": opt.id,
+                    "publisher": opt.publisher,
+                    "apply_link": opt.apply_link,
+                    "is_direct": opt.is_direct,
+                } for opt in job.apply_options.all()
             ],
         })
 
-
+    total = qs.count()
     return Response({
-        "count": queryset.count(),
-        "total_pages": ceil(queryset.count() / paginator.page_size) if paginator.page_size else 1,
-        "current_page": request.GET.get('page', 1),
+        "count": total,
+        "total_pages": ceil(total / paginator.page_size) if paginator.page_size else 1,
+        "current_page": int(request.GET.get('page', 1) or 1),
         "next": paginator.get_next_link(),
         "previous": paginator.get_previous_link(),
-        "filters": {
-            "employment_types": sorted(list(set(filter(None, employment_types)))),
-        },
-        "results": data
+        "filters": {"employment_types": employment_types},
+        "results": results,
     })
 
 
