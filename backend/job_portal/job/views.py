@@ -84,7 +84,11 @@ def jobs_list(request):
         ).distinct()
     
     if min_salary:
-        queryset = queryset.filter(min_salary__gte=min_salary)
+        try:
+            min_salary_value = int(min_salary)
+            queryset = queryset.filter(min_salary__gte=min_salary_value)
+        except ValueError:
+            pass
     
     if is_remote is not None:
             is_remote_bool = str(is_remote).lower() == 'true'
