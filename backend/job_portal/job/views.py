@@ -86,8 +86,9 @@ def jobs_list(request):
     if min_salary:
         queryset = queryset.filter(min_salary__gte=min_salary)
     
-    if is_remote:
-        queryset = queryset.filter(is_remote=True if is_remote.lower() == 'true' else False)
+    if is_remote is not None:
+            is_remote_bool = str(is_remote).lower() == 'true'
+            queryset = queryset.filter(is_remote=is_remote_bool)
     
     queryset = queryset.order_by('-posted_at')
     
