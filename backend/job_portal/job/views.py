@@ -68,7 +68,7 @@ def jobs_list(request):
             Q(description__icontains=search) |
             Q(employer__name__icontains=search) |
             Q(skills_required__icontains=search)
-        )
+        ).distinct()
     
     if location:
         queryset = queryset.filter(
