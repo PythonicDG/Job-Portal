@@ -6,6 +6,11 @@ class EmployerSerializer(serializers.ModelSerializer):
         model = Employer
         fields = ['name', 'employer_logo', 'website']
 
+    def get_employer_logo(self, obj):
+        if obj.employer_logo:
+            return obj.employer_logo.url
+        return None
+
 class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
