@@ -13,8 +13,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from .util import send_otp_mail, send_otp_mail_threaded, send_forgot_password_otp, send_otp_mail_threaded_forgot
 from django.utils import timezone
-from .models import SiteUser
+from .models import SiteUser, UserAddress
 from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ObjectDoesNotExist
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -317,3 +318,61 @@ def update_password(request):
 
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_user_profile(request):
+    try:
+        user = request.user
+        site_user = SiteUser.objects.get(user=user)
+
+        first_name = request.data.get('first_name')
+        last_name = request.data.get('last_name')
+        phone_number = request.data.get('phone_number')
+        profile_picture = request.FILES.get('profile_picture')
+        resume = request.FILES.get('resume')
+
+        address_id = request.data.get('address_id') 
+        address = request.data.get('address')
+        city = request.data.get('city')
+        state = request.data.get('state')
+        country = request.data.get('country')
+        pincode = request.data.get('pincode')
+
+        if first_name is not None:
+            site_user.user.first_name = first_name
+        if last_name is not None:
+            site_user.user.last_name = last_name
+        if phone_number is not None:
+            site_user.phone_number = phone_number
+        if profile_picture is not None:
+            site_user.profile_picture = profile_picture
+        if resume is not None:
+            site_user.resume_link = resume
+
+        site_user.save()
+        site_user.user.save()
+
+        user_address = UserAddress.objects.get(user=site_user)
+
+        if user_address:
+            if address is not None:
+                user_address.address = address
+            if city is not None:
+                user_address.city = city
+            if state is not None:
+                user_address.state = state
+            if country is not None:
+                user_address.country = country
+            if pincode is not None:
+                user_address.pincode = pincode
+
+
+            user_address.save()
+
+        return JsonResponse({"message": "User profile and address updated successfully"}, status=200)
+
+    except ObjectDoesNotExist:
+        return JsonResponse({"error": "SiteUser profile not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
