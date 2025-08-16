@@ -219,14 +219,14 @@ def unsave_job(request, job_id):
     try:
         job = Job.objects.get(job_id=job_id)
 
-        saved_job = SavedJob.objects.get(user=request.user, job=job)
+        saved_job = UserSavedJob.objects.get(user=request.user, job=job)
         saved_job.delete()
 
         return Response({"message": "Job unsaved successfully"}, status=204)
 
     except Job.DoesNotExist:
         return Response({"error": "Job not found"}, status=404)
-    except SavedJob.DoesNotExist:
+    except UserSavedJob.DoesNotExist:
         return Response({"error": "Saved job not found for user"}, status=404)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
@@ -329,3 +329,5 @@ def profile_button_items(request):
         "status": "success",
         "items": serializer.data
     })
+
+    
