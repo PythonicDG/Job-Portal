@@ -24,7 +24,8 @@ INSTALLED_APPS = [
     'mainapp.apps.MainappConfig',
     'frontend',
     'job',
-    'headerfooter'
+    'headerfooter',
+    'company'
 ]
 
 MIDDLEWARE = [
@@ -164,3 +165,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
+
+HUNTER_API_KEY = "5dc9fb23faaaddad05bbbd1a3106de0e38ad5130"
+ENRICHMENT_API_KEY = "68a1965d8f5ae972f19704e5"

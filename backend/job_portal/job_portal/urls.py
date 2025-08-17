@@ -13,7 +13,7 @@ urlpatterns = [
     path("mainapp/", include("mainapp.urls")),
     path("frontend/", include("frontend.urls")),
     path("headerfooter/", include("headerfooter.urls")),
-
+    path("company/", include("company.urls")),
     ]
 
 if settings.DEBUG:
