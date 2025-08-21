@@ -339,7 +339,7 @@ def profile_button_items(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_unread_notifications(request):
+def list_notifications(request):
     user = request.user
     site_user = SiteUser.objects.get(user=user)
     
