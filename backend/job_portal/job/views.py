@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from .utils import fetch_jobs, fetch_and_store_jobs
-from .models import Job, SidebarMenu, UserSavedJob, user_viewed_jobs, EmploymentType, ProfileButtonItem
+from .models import Job, SidebarMenu, UserSavedJob, user_viewed_jobs, EmploymentType, ProfileButtonItem, Notification
 from django.http import JsonResponse
 from headerfooter.models import CompanyInfo
 from rest_framework.pagination import PageNumberPagination
@@ -357,10 +357,13 @@ def list_notifications(request):
 
 
 @api_view(['POST'])
-def mark_notification_read(request, notification_id):
+def mark_notification_read(request):
     user = request.user
     site_user = SiteUser.objects.get(user=user)
-    
+    notification_id = request.data.get('notification_id')
+
+    if not notification_id:
+        return Response({"status": "error", "message": "Notification ID is required."}, status=400)
     try:
         notification = site_user.notifications.get(id=notification_id)
         notification.is_read = True
