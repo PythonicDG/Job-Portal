@@ -338,10 +338,12 @@ def profile_button_items(request):
     })
 
 @api_view(['GET'])
-def list_notifications(request):
+@permission_classes([IsAuthenticated])
+def list_unread_notifications(request):
     user = request.user
     site_user = SiteUser.objects.get(user=user)
-    notifications = site_user.notifications.order_by('-created_at')
+    
+    unread_notifications = site_user.notifications.filter(is_read=False).order_by('-created_at')
     
     data = [{
         "id": n.id,
@@ -349,6 +351,28 @@ def list_notifications(request):
         "message": n.message,
         "is_read": n.is_read,
         "created_at": n.created_at
-    } for n in notifications]
+    } for n in unread_notifications]
 
     return Response({"notifications": data})
+
+
+@api_view(['POST'])
+def mark_notification_read(request, notification_id):
+    user = request.user
+    site_user = SiteUser.objects.get(user=user)
+    
+    try:
+        notification = site_user.notifications.get(id=notification_id)
+        notification.is_read = True
+        notification.save()
+        return Response({"status": "success", "message": "Notification marked as read."})
+    except Notification.DoesNotExist:
+        return Response({"status": "error", "message": "Notification not found."}, status=404)
+
+@api_view(['POST'])
+def mark_all_notifications_read(request):
+    user = request.user
+    site_user = SiteUser.objects.get(user=user)
+    
+    site_user.notifications.update(is_read=True)
+    return Response({"status": "success", "message": "All notifications marked as read."})
