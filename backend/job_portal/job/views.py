@@ -16,7 +16,6 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.postgres.search import SearchVector
 import re
 from mainapp.models import SiteUser
-from .signals import jobs_synced
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -45,11 +44,9 @@ def sync_jobs(request):
             new_jobs_count = fetch_and_store_jobs(response)
             total_new_jobs += new_jobs_count
         
-        jobs_synced.send(sender=None, total_jobs=total_new_jobs)
-        
         return Response({
             "status": "success",
-            "message": f"Jobs synced successfully for {len(queries)} job roles."
+            "message": f"{total_new_jobs} new jobs synced successfully for {len(queries)} job roles."
         })
 
     except Exception as e:

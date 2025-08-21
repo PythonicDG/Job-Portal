@@ -1,10 +1,9 @@
 import os
 import requests
 from urllib.parse import urlparse
-
 from django.conf import settings
 from django.core.files.base import ContentFile
-
+from .signals import job_created
 from .models import Job, Employer, Location, ApplyOption, EmploymentType
 
 BASE_URL = "https://jsearch.p.rapidapi.com/search"
@@ -46,7 +45,6 @@ def download_image_from_url(url):
 
 
 from django.db import transaction
-
 def fetch_and_store_jobs(response):
     apply_options_to_create = []
     emp_types_to_create = []
@@ -105,6 +103,8 @@ def fetch_and_store_jobs(response):
 
         if created:
             created_count += 1  
+            job_created.send(sender=Job, job_instance=job)
+
             for apply_data in job_data.get('apply_options', []):
                 apply_options_to_create.append(ApplyOption(
                     job=job,
@@ -121,5 +121,4 @@ def fetch_and_store_jobs(response):
     if emp_types_to_create:
         EmploymentType.objects.bulk_create(emp_types_to_create, ignore_conflicts=True)
 
-    return created_count   
-
+    return created_count
