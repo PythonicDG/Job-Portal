@@ -13,7 +13,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from .util import send_otp_mail, send_otp_mail_threaded, send_forgot_password_otp, send_otp_mail_threaded_forgot
 from django.utils import timezone
-from .models import SiteUser, UserAddress
+from .models import (
+    SiteUser, Education, Experience, Skill, Certification, Language, Project, UserAddress
+)
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -376,3 +378,114 @@ def update_user_profile(request):
         return JsonResponse({"error": "SiteUser profile not found"}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
+@api_view(['POST'])
+def complete_profile(request):
+    user = request.user
+    site_user = SiteUser.objects.get(user=user)
+
+    site_user.profile_picture = request.FILES.get('profile_picture', site_user.profile_picture)
+    site_user.date_of_birth = request.data.get('date_of_birth', site_user.date_of_birth)
+    site_user.gender = request.data.get('gender', site_user.gender)
+    site_user.linkdin_url = request.data.get('linkedin_url', site_user.linkdin_url)
+    site_user.github_url = request.data.get('github_url', site_user.github_url)
+    site_user.portfolio_url = request.data.get('portfolio_url', site_user.portfolio_url)
+    site_user.phone_number = request.data.get('phone_number', site_user.phone_number)
+    site_user.resume_link = request.FILES.get('resume_link', site_user.resume_link)
+    site_user.updated_at = timezone.now()
+    site_user.save()
+
+    address_data = request.data.get('address')
+    if address_data:
+        UserAddress.objects.update_or_create(
+            user=site_user,
+            type='Current Address',
+            defaults={
+                'address': address_data.get('address'),
+                'city': address_data.get('city'),
+                'state': address_data.get('state'),
+                'country': address_data.get('country'),
+                'pincode': address_data.get('pincode'),
+                'is_selected': address_data.get('is_selected', False),
+            }
+        )
+
+    education_list = request.data.get('education', [])
+    for edu in education_list:
+        Education.objects.update_or_create(
+            user=site_user,
+            degree=edu.get('degree'),
+            institution=edu.get('institution'),
+            defaults={
+                'field_of_study': edu.get('field_of_study'),
+                'start_year': edu.get('start_year'),
+                'end_year': edu.get('end_year'),
+                'grade': edu.get('grade')
+            }
+        )
+
+    experience_list = request.data.get('experience', [])
+    for exp in experience_list:
+        Experience.objects.update_or_create(
+            user=site_user,
+            job_title=exp.get('job_title'),
+            company_name=exp.get('company_name'),
+            defaults={
+                'start_date': exp.get('start_date'),
+                'end_date': exp.get('end_date'),
+                'is_current': exp.get('is_current', False),
+                'description': exp.get('description')
+            }
+        )
+
+    skills_list = request.data.get('skills', [])
+    for skill in skills_list:
+        Skill.objects.update_or_create(
+            user=site_user,
+            name=skill.get('name'),
+            defaults={
+                'proficiency': skill.get('proficiency', 'Beginner')
+            }
+        )
+
+    projects_list = request.data.get('projects', [])
+    for project in projects_list:
+        Project.objects.update_or_create(
+            user=site_user,
+            title=project.get('title'),
+            defaults={
+                'description': project.get('description'),
+                'technologies': project.get('technologies'),
+                'start_date': project.get('start_date'),
+                'end_date': project.get('end_date'),
+                'is_ongoing': project.get('is_ongoing', False),
+                'project_url': project.get('project_url'),
+                'repo_url': project.get('repo_url')
+            }
+        )
+
+    cert_list = request.data.get('certifications', [])
+    for cert in cert_list:
+        Certification.objects.update_or_create(
+            user=site_user,
+            name=cert.get('name'),
+            defaults={
+                'issuer': cert.get('issuer'),
+                'date_obtained': cert.get('date_obtained')
+            }
+        )
+
+    languages_list = request.data.get('languages', [])
+    for lang in languages_list:
+        Language.objects.update_or_create(
+            user=site_user,
+            name=lang.get('name'),
+            defaults={'proficiency': lang.get('proficiency', 'Basic')}
+        )
+
+    response_data = {
+        "message": "Profile updated successfully",
+        "profile_completion": site_user.profile_completion()
+    }
+
+    return Response(response_data)
