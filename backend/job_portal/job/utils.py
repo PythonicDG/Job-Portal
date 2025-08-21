@@ -50,6 +50,7 @@ from django.db import transaction
 def fetch_and_store_jobs(response):
     apply_options_to_create = []
     emp_types_to_create = []
+    created_count = 0  
 
     for job_data in response.get('data', []):
         job_id = job_data['job_id']
@@ -75,6 +76,7 @@ def fetch_and_store_jobs(response):
                     'longitude': job_data.get('job_longitude'),
                 }
             )
+
         apply_link = ''
         for apply_data in job_data.get('apply_options', []):
             if apply_data.get('is_direct'):
@@ -102,6 +104,7 @@ def fetch_and_store_jobs(response):
         )
 
         if created:
+            created_count += 1  
             for apply_data in job_data.get('apply_options', []):
                 apply_options_to_create.append(ApplyOption(
                     job=job,
@@ -117,3 +120,6 @@ def fetch_and_store_jobs(response):
         ApplyOption.objects.bulk_create(apply_options_to_create, ignore_conflicts=True)
     if emp_types_to_create:
         EmploymentType.objects.bulk_create(emp_types_to_create, ignore_conflicts=True)
+
+    return created_count   
+

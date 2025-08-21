@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (Employer, Location, Job, ApplyOption, EmploymentType, SidebarMenu, UserSavedJob, 
-                        user_viewed_jobs, user_applied_jobs_log, ProfileButtonItem)
+                        user_viewed_jobs, user_applied_jobs_log, ProfileButtonItem, Notification)
 
 @admin.register(Employer)
 class EmployerAdmin(admin.ModelAdmin):
@@ -58,3 +58,12 @@ class SidebarItemAdmin(admin.ModelAdmin):
     list_filter = ('type', 'visible')
     search_fields = ('label', 'path', 'action')
     ordering = ('order',)
+    
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user_email', 'title', 'is_read', 'created_at')
+    search_fields = ('user__user__email', 'title', 'message')
+    list_filter = ('is_read', 'created_at')
+
+    def user_email(self, obj):
+        return obj.user.user.email

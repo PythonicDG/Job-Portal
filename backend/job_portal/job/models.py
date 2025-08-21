@@ -1,8 +1,8 @@
 from django.db import models
-
+from mainapp.models import SiteUser
 
 class Employer(models.Model):
-    name = models.CharField(max_length = 500)
+    name = models.CharField(max_length = 500, unique = True)
     employer_logo =  models.ImageField(upload_to = "employer_logo/")
     website = models.URLField(blank=True, null=True, max_length = 500)
 
@@ -119,3 +119,13 @@ class ProfileButtonItem(models.Model):
 
     def __str__(self):
         return self.label or f"{self.type} - {self.id}"
+    
+class Notification(models.Model):
+    user = models.ForeignKey(SiteUser, on_delete=models.CASCADE, related_name='notifications')
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title} - {self.user.user.email}"

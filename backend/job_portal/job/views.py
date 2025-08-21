@@ -15,6 +15,8 @@ from .serializer import JobSerializer, ProfileButtonSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.postgres.search import SearchVector
 import re
+from mainapp.models import SiteUser
+from .signals import jobs_synced
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -35,11 +37,16 @@ def sync_jobs(request):
             "Node.js Developer",
             "Software Engineer"
         ]
-
+        
+        total_new_jobs = 0
+        
         for query in queries:
             response = fetch_jobs(query=query, location=location, page=page)
-            fetch_and_store_jobs(response)
-
+            new_jobs_count = fetch_and_store_jobs(response)
+            total_new_jobs += new_jobs_count
+        
+        jobs_synced.send(sender=None, total_jobs=total_new_jobs)
+        
         return Response({
             "status": "success",
             "message": f"Jobs synced successfully for {len(queries)} job roles."
@@ -330,4 +337,18 @@ def profile_button_items(request):
         "items": serializer.data
     })
 
+@api_view(['GET'])
+def list_notifications(request):
+    user = request.user
+    site_user = SiteUser.objects.get(user=user)
+    notifications = site_user.notifications.order_by('-created_at')
     
+    data = [{
+        "id": n.id,
+        "title": n.title,
+        "message": n.message,
+        "is_read": n.is_read,
+        "created_at": n.created_at
+    } for n in notifications]
+
+    return Response({"notifications": data})

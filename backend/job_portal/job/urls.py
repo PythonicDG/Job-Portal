@@ -12,5 +12,6 @@ urlpatterns = [
     path('dashboard_data/', views.dashboard_data),
     path('profile_button_items/', views.profile_button_items),
     path('saved_jobs/', views.user_saved_jobs),
+    path('list_notifications/', views.list_notifications)
 
 ]
