@@ -384,31 +384,14 @@ def complete_profile(request):
     user = request.user
     site_user = SiteUser.objects.get(user=user)
 
-    site_user.profile_picture = request.FILES.get('profile_picture', site_user.profile_picture)
     site_user.date_of_birth = request.data.get('date_of_birth', site_user.date_of_birth)
     site_user.gender = request.data.get('gender', site_user.gender)
     site_user.linkdin_url = request.data.get('linkedin_url', site_user.linkdin_url)
     site_user.github_url = request.data.get('github_url', site_user.github_url)
     site_user.portfolio_url = request.data.get('portfolio_url', site_user.portfolio_url)
-    site_user.phone_number = request.data.get('phone_number', site_user.phone_number)
-    site_user.resume_link = request.FILES.get('resume_link', site_user.resume_link)
     site_user.updated_at = timezone.now()
     site_user.save()
 
-    address_data = request.data.get('address')
-    if address_data:
-        UserAddress.objects.update_or_create(
-            user=site_user,
-            type='Current Address',
-            defaults={
-                'address': address_data.get('address'),
-                'city': address_data.get('city'),
-                'state': address_data.get('state'),
-                'country': address_data.get('country'),
-                'pincode': address_data.get('pincode'),
-                'is_selected': address_data.get('is_selected', False),
-            }
-        )
 
     education_list = request.data.get('education', [])
     for edu in education_list:
