@@ -18,7 +18,7 @@ from .models import (
 )
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
-
+from .serializers import SiteUserSerializer
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def send_otp_for_register_email(request):
@@ -519,3 +519,12 @@ def complete_profile(request):
     }
 
     return Response(response_data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_complete_profile(request):
+    user = request.user
+    site_user = SiteUser.objects.get(user=user)
+
+    serializer = SiteUserSerializer(site_user)
+    return Response(serializer.data)
