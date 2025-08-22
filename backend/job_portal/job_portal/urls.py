@@ -14,6 +14,7 @@ urlpatterns = [
     path("frontend/", include("frontend.urls")),
     path("headerfooter/", include("headerfooter.urls")),
     path("company/", include("company.urls")),
+    path("employer/", include("employer.urls")),
     ]
 
 if settings.DEBUG:

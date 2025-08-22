@@ -25,7 +25,8 @@ INSTALLED_APPS = [
     'frontend',
     'job',
     'headerfooter',
-    'company'
+    'company',
+    'employer'
 ]
 
 MIDDLEWARE = [
