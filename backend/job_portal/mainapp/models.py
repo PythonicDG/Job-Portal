@@ -23,7 +23,12 @@ def resume_upload_path(instance, filename):
 
 
 class SiteUser(models.Model):
+    USER_ROLES = (
+        ("employee", "Employee"),
+        ("employer", "Employer"),
+    )
     user = models.OneToOneField(User, on_delete = models.CASCADE)
+    role = models.CharField(max_length=20, choices=USER_ROLES, default="employee")
     profile_picture = models.ImageField(upload_to = 'profile_pictures/')
     phone_number = models.CharField(
         max_length=15,
@@ -92,6 +97,63 @@ class SiteUser(models.Model):
     def __str__(self):
         return f"Profile of {self.user.username}"
 
+class Employer(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="employer_profile"
+    )
+
+    company_name = models.CharField(max_length=200)
+    company_phone = models.CharField(
+        max_length=15,
+        validators=[
+            RegexValidator(
+                regex=r'^\+?1?\d{9,15}$',
+                message="Phone number must be in the format: '+999999999'."
+            )
+        ],
+    )
+    company_website = models.URLField(blank=True, null=True)
+    industry_type = models.CharField(max_length=100, blank=True, null=True)
+    company_size = models.CharField(
+        max_length=50,
+        choices=(
+            ("1-10", "1-10 employees"),
+            ("11-50", "11-50 employees"),
+            ("51-200", "51-200 employees"),
+            ("201-500", "201-500 employees"),
+            ("500+", "500+ employees"),
+        ),
+        blank=True,
+        null=True,
+    )
+    company_logo = models.ImageField(upload_to="company_logos/", blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+
+    pan_gst = models.CharField(max_length=30, blank=True, null=True)
+
+    brc_file = models.FileField(upload_to="brc_documents/", blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.company_name
+
+class EmployerAddress(models.Model):
+    employer = models.OneToOneField(
+        Employer, on_delete=models.CASCADE, related_name="address"
+    )
+    street = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=20)
+    country = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.street}, {self.city}, {self.state}, {self.country}"
+
+
+    
 class VerifyEmailOtp(models.Model):
     email = models.EmailField(unique = True)
     otp = models.CharField(unique = True)

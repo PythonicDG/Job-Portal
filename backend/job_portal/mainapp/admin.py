@@ -12,7 +12,8 @@ from .models import (
     Skill,
     Certification,
     Language,
-    Project
+    Project,
+    Employer
 )
 
 
@@ -212,3 +213,5 @@ class ProjectAdmin(admin.ModelAdmin):
             return format_html('<a href="{}" target="_blank">Repo Link</a>', obj.repo_url)
         return "-"
     project_link_preview.short_description = 'Project Link'
+
+admin.site.register(Employer)

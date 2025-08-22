@@ -14,7 +14,7 @@ from rest_framework.permissions import AllowAny
 from .util import send_otp_mail, send_otp_mail_threaded, send_forgot_password_otp, send_otp_mail_threaded_forgot
 from django.utils import timezone
 from .models import (
-    SiteUser, Education, Experience, Skill, Certification, Language, Project, UserAddress
+    SiteUser, Education, Experience, Skill, Certification, Language, Project, UserAddress, Employer
 )
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
@@ -77,68 +77,86 @@ def verify_otp_email_verification(request):
 def user_registration(request):
     with transaction.atomic():
         try:
+            role = request.data.get("role")
             email = request.data.get("email")
             password = request.data.get("password")
             otp = request.data.get("otp")
-            first_name = request.data.get("first_name")
-            last_name = request.data.get("last_name")
-            phone_number = request.data.get("phone_number")
-            profile_picture = request.FILES.get("profile_picture")
-            address = request.data.get("address")
-            city = request.data.get("city")
-            state = request.data.get("state")
-            country = request.data.get("country")
-            pincode = request.data.get("pincode")
-            resume_link = request.FILES.get("resume_link")
-            is_selected = request.data.get('is_selected', False)
 
-            if not all((email, first_name, last_name, phone_number, address, city, state, country, pincode)):
-                return JsonResponse({"error": "Invalid request data"}, status=400)
-            
+            if role not in ["employee", "employer"]:
+                return JsonResponse({"error": "Invalid role"}, status=400)
+
             otp_instance = VerifyEmailOtp.objects.filter(email=email, otp=otp).first()
-
             if not otp_instance:
                 return JsonResponse({"error": "Invalid OTP"}, status=400)
-
             if timezone.now() > otp_instance.expires_at:
                 return JsonResponse({"error": "OTP Expired"}, status=400)
-            
-            existing_user = SiteUser.objects.filter(user__email=email).first()  
 
-            if existing_user:
+            if User.objects.filter(email=email).exists():
                 return JsonResponse({"error": "User with this Email already exists"}, status=400)
-            
-            user = User.objects.create_user(
-                username=email,
-                email=email,
-                password=password,
-                first_name=first_name,
-                last_name=last_name
-            )
-            
-            site_user = SiteUser.objects.create(
-                user=user,
-                phone_number=phone_number,
-                profile_picture=profile_picture,
-                resume_link=resume_link
-            )
-            
-            UserAddress.objects.create(
-                user=site_user,
-                address=address,
-                city=city,
-                state=state,
-                country=country,
-                pincode=pincode
-            )
-            
+
+            user = User.objects.create_user(username=email, email=email, password=password)
+
+            if role == "employee":
+                first_name = request.data.get("first_name")
+                last_name = request.data.get("last_name")
+                phone_number = request.data.get("phone_number")
+                profile_picture = request.FILES.get("profile_picture")
+                resume_link = request.FILES.get("resume_link")
+
+                user.first_name = first_name
+                user.last_name = last_name
+                user.save()
+
+                site_user = SiteUser.objects.create(
+                    user=user,
+                    role="employee",
+                    phone_number=phone_number,
+                    profile_picture=profile_picture,
+                    resume_link=resume_link,
+                )
+
+                UserAddress.objects.create(
+                    user=site_user,
+                    address=request.data.get("address"),
+                    city=request.data.get("city"),
+                    state=request.data.get("state"),
+                    country=request.data.get("country"),
+                    pincode=request.data.get("pincode"),
+                )
+
+            elif role == "employer":
+                company_data = request.data.get("company", {})
+                compliance_data = request.data.get("compliance", {})
+
+                employer = Employer.objects.create(
+                    user=user,
+                    company_name=company_data.get("name"),
+                    company_phone=company_data.get("phone"),
+                    company_website=company_data.get("website"),
+                    industry_type=company_data.get("industry"),
+                    company_size=company_data.get("size"),
+                    company_logo=request.FILES.get("logo"),
+                    description=company_data.get("description"),
+                    pan_gst=compliance_data.get("panGst"),
+                    brc_file=request.FILES.get("brcFile"),
+                )
+
+                address_data = company_data.get("address", {})
+                EmployerAddress.objects.create(
+                    employer=employer,
+                    street=address_data.get("street"),
+                    city=address_data.get("city"),
+                    state=address_data.get("state"),
+                    pincode=address_data.get("pincode"),
+                    country=address_data.get("country"),
+                )
+
             otp_instance.delete()
-            # send_registration_mail(user)
+
             return JsonResponse({"message": "User registered successfully"}, status=201)
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-        
         
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -148,25 +166,54 @@ def user_login(request):
         password = request.data.get("password")
 
         if not email or not password:
-            return JsonResponse({"error": "Email and password are required"}, status = status.HTTP_400_BAD_REQUEST)
-        
-        user = authenticate(request, username = email, password = password)
+            return Response({"error": "Email and password are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = authenticate(request, username=email, password=password)
 
         if user is not None:
-            token, crated = Token.objects.get_or_create(user = user)
+            token, created = Token.objects.get_or_create(user=user)
 
-            return JsonResponse({"message": "Login sucess",
-                                 "token": token.key,
-                                 "user": {
-                                     "id": user.id,
-                                     "email": user.email,
-                                 }})
-            
+            role = None
+            profile = {}
+
+            if hasattr(user, "siteuser") and user.siteuser is not None:
+                role = user.siteuser.role  
+                profile = {
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "phone_number": user.siteuser.phone_number,
+                    "resume_link": user.siteuser.resume_link.url if user.siteuser.resume_link else None,
+                    "profile_picture": user.siteuser.profile_picture.url if user.siteuser.profile_picture else None,
+                }
+
+            elif hasattr(user, "employer_profile") and user.employer_profile is not None:
+                role = "employer"
+                profile = {
+                    "company_name": user.employer_profile.company_name,
+                    "company_phone": user.employer_profile.company_phone,
+                    "company_website": user.employer_profile.company_website,
+                    "industry_type": user.employer_profile.industry_type,
+                    "company_size": user.employer_profile.company_size,
+                    "company_logo": user.employer_profile.company_logo.url if user.employer_profile.company_logo else None,
+                }
+
+            return Response({
+                "message": "Login success",
+                "token": token.key,
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "role": role,
+                    "profile": profile
+                }
+            })
+
         else:
             return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
     except Exception as e:
-        return JsonResponse({"error": str(e)})
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     
 @api_view(["POST"])
 @permission_classes([AllowAny])
