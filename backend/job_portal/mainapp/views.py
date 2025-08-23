@@ -19,6 +19,8 @@ from .models import (
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ObjectDoesNotExist
 from .serializers import SiteUserSerializer
+
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def send_otp_for_register_email(request):
